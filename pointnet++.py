@@ -2,19 +2,27 @@ import  torch
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from SetAbsctraction.py import SA
+from SetAbstraction import SA
 
 class Pointnet_plus(torch.nn.Module):
     def __init__(self):
-        super(Model, self).__init__()
+        super(Pointnet_plus, self).__init__()
+        #blocks of Set Abstractions
         self.sa1 = SA()
         self.sa2 = SA()
         self.sa3 = SA()
-        self.linear1 = torch.nn.Linear()
+
+        #classification part
+        #maybe change the numbers, i put them random
+        C4 = 10
+        C5 = 50
+        C6 = 128
+        k = 4 #number of classes
+        self.linear1 = torch.nn.Linear(C4, C5)
         self.activation1 = torch.nn.ReLU()
-        self.linear2 = torch.nn.Linear()
+        self.linear2 = torch.nn.Linear(C5, C6)
         self.activation2 = torch.nn.ReLU()
-        self.linear3 = torch.nn.Linear()
+        self.linear3 = torch.nn.Linear(C6, k)
         self.softmax = torch.nn.Softmax()
 
     def forward(self, x):

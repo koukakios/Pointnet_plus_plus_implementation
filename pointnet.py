@@ -2,16 +2,31 @@ import  torch
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from Tnet.py import TNet
+from Tnet import TNet
 
 class Pointnet(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, dim_in, dim_out):
         super(Pointnet, self).__init__()
-        #Tnet1
-        self.Tnet1 = TNet(k = 3)
 
-        #mlp 3 -> 64 -> 64
-        self.lin1 = torch.nn.Linear(3, 64)
+        #in - out dimensions
+        self.dim_in = dim_in
+        self.dim_out = dim_out
+
+        #Tnet1
+        self.Tnet1 = TNet(k = dim_in)
+
+        """
+        So in pointnet basic u always begin with fixed dimensions and go to 1024 (in the paper it is 
+        3 -> (blah, blah) -> 1024.
+        But in our case this 1024 dimensional vector becomes an input to the next pointnet in the next SetAbstraction
+        layer. SO we cant fix the input and output dimension. So my guess is that these are hyperparameters that
+        we take as input and we can ,fingers crossed, tune later.
+        
+        Then the question is what to do with the in between dimensions. I say they are multiples or somehow have to do
+        with the dim_in and should end up always to dim_out. I guess extra hyperparam tuning...
+        """
+        #mlp dim_in -> idk -> idk
+        self.lin1 = torch.nn.Linear(dim_in, 64)
         self.activation1 = torch.nn.ReLU()
         self.lin2 = torch.nn.Linear(64, 64)
         self.activation2 = torch.nn.ReLU()

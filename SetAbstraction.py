@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from torch_geometric.nn import fps
-from pointnet.py import Pointnet
+from pointnet import Pointnet
 
 class SA(torch.nn.Module):
     def __init__(self):
@@ -27,11 +27,13 @@ class SA(torch.nn.Module):
         idx_expanded = idx.unsqueeze(-1).expand(-1, -1, -1, D)  # (B, M, 32, D)
         groups = torch.gather(x_expanded, 2, idx_expanded)
 
-        #groups (B, M, K, D) k = 32 (neighbours in our case)
+        #groups (B, M, K, D) K = 32 (neighbours in our case)
+        #B is batchsize
+        #M is number of groups
+        #Each group has K points and D dimensions
         #apply pointnet in all groups
-        self.pointnet.forward(groups)
+        result = self.pointnet.forward(groups)
 
-        #from here on the classification branch begins
         
 
 
