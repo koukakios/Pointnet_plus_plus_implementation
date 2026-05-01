@@ -3,51 +3,51 @@ import torch
 
 
 class Pointnet(torch.nn.Module):
-    def __init__(self, dim_in, dim_out):
+    def __init__(self, dims_1, dims_2):
         super(Pointnet, self).__init__()
-
-        self.dim_in = dim_in
-        self.dim_out = dim_out
 
         # Optional T-Net for input alignment.
         # Not needed yet for minimal PointNet++.
-        # self.tnet1 = TNet(k=dim_in)
+        # self.tnet1 = TNet(k=dims1[0])
 
-        self.mlp1 = torch.nn.Sequential(
-            torch.nn.Linear(dim_in, 64),
-            torch.nn.ReLU(),
-            torch.nn.Linear(64, 64),
-            torch.nn.ReLU(),
-        )
+        #define first mlp
+        layers = []
+        for v, w in zip(dims_1, dims_1[1:]):
+            layers.append(torch.nn.Linear(v, w))
+            layers.append(torch.nn.ReLU())
+
+        self.mlp_1 = torch.nn.Sequential(*layers)
 
         # Optional feature T-Net.
         # In full PointNet this aligns 64D features.
         # Skip for now until the basic model runs.
         # self.tnet2 = TNet(k=64)
 
-        self.mlp2 = torch.nn.Sequential(
-            torch.nn.Linear(64, 128),
-            torch.nn.ReLU(),
-            torch.nn.Linear(128, dim_out),
-            torch.nn.ReLU(),
-        )
+        #define second mlp
+        layers = []
+        for v, w in zip(dims_2, dims_2[1:]):
+            layers.append(torch.nn.Linear(v, w))
+            layers.append(torch.nn.ReLU())
 
-    def forward(self, x):
+        self.mlp_2 = torch.nn.Sequential(*layers)
+
+
+def forward(self, x):
         # x: (B, M, K, dim_in)
         # B = batch size
         # M = sampled center points
-        # K = neighbours per center
+        # K = neighbours per center, 32 by default
         # dim_in = point feature dimension
 
         # Optional input transform:
         # x = self.tnet1(x)
 
-        x = self.mlp1(x)
+        x = self.mlp_1(x)
 
         # Optional feature transform:
         # x = self.tnet2(x)
 
-        x = self.mlp2(x)
+        x = self.mlp_2(x)
 
         # Max-pool over neighbours K
         x = x.max(dim=2)[0]   # (B, M, dim_out)
