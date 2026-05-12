@@ -1,6 +1,6 @@
 import torch
-from SetAbstraction import SA
-from pointnet import Pointnet
+from .SetAbstraction import SA
+from .pointnet import Pointnet
 
 class Pointnet_plus(torch.nn.Module):
     def __init__(self, dim_in=3, num_classes=4):
