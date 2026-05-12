@@ -1,5 +1,5 @@
 import torch
-#from Tnet import TNet
+#from .Tnet import TNet
 
 
 class Pointnet(torch.nn.Module):
