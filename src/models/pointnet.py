@@ -31,13 +31,12 @@ class Pointnet(torch.nn.Module):
 
         self.mlp_2 = torch.nn.Sequential(*layers)
 
-
-def forward(self, x):
+    def forward(self, x):
         # x: (B, M, K, dim_in)
         # B = batch size
         # M = sampled center points
         # K = neighbours per center, 32 by default
-        # dim_in = point feature dimension
+        # dim_in = features
 
         # Optional input transform:
         # x = self.tnet1(x)
@@ -50,6 +49,6 @@ def forward(self, x):
         x = self.mlp_2(x)
 
         # Max-pool over neighbours K
-        x = x.max(dim=2)[0]   # (B, M, dim_out)
+        x = x.max(dim=2)[0]  # (B, M, dim_out)
 
         return x
