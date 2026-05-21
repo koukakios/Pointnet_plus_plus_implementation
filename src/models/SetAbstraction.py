@@ -3,7 +3,7 @@ from .pointnet import Pointnet
 from torch_geometric.nn import fps
 
 class SA(torch.nn.Module):
-    def __init__(self, dims_2nd_mlp, dims_1st_mlp, ratio=0.25, k=32):
+    def __init__(self, dims_1st_mlp, dims_2nd_mlp, ratio=0.25, k=32):
         super(SA, self).__init__()
         self.pointnet = Pointnet(dims_1st_mlp, dims_2nd_mlp)
         self.ratio = ratio

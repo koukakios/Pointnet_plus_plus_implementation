@@ -31,13 +31,22 @@ class Pointnet_plus(torch.nn.Module):
         )
 
     def forward(self, x):
-        # x: (B, N, dim_in)
+        # x: (B, N, dim_in) in this case dim_in is x, y, z, etc extra feats
 
-        x = self.sa1(x)   # (B, M1, dims_sa1_2nd_mlp[-1])
-        x = self.sa2(x)   # (B, M2, dims_sa2_2nd_mlp[-1])
+        x_3d = x[:, :, :3]
+        x_features = x
+        x_3d, x_features = self.sa1(x_3d, x_features)   # (B, M1, dims_sa1_2nd_mlp[-1])
+        x_3d, x_features = self.sa2(x_3d, x_features)   # (B, M2, dims_sa2_2nd_mlp[-1])
 
-        x = self.pointnet(x)   # (B, 1, dims_pointnet_2nd_mlp[-1])
+        #from here onwards we dont need the x_3d as we aint doin any sampling.
+        #we take all the features given by the last SetAbstraction and put them in pointnet
 
-        x = self.classifier(x)  # (B, num_classes)
+        #small tricky to feed all the points to the pointnet and
+        #match the dimensions needed from the fwd function of pointnet
+        x_expanded = x_features.unsqueeze(1).expand(-1, 1, -1, -1)
+
+        x = self.pointnet(x_expanded)   # (B, 1, dims_pointnet_2nd_mlp[-1])
+
+        x = self.classifier(x[:, 0, :])  # (B, num_classes)
 
         return x
