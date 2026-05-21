@@ -3,48 +3,74 @@ from pointnet import Pointnet
 from torch_geometric.nn import fps
 
 class SA(torch.nn.Module):
-    def __init__(self, dims_2, dims_1, ratio=0.25, k=32):
+    def __init__(self, dims_2nd_mlp, dims_1st_mlp, ratio=0.25, k=32):
         super(SA, self).__init__()
-        self.pointnet = Pointnet(dims_1, dims_2)
+        self.pointnet = Pointnet(dims_1st_mlp, dims_2nd_mlp)
         self.ratio = ratio
-        self.k = k
+        self.knn_neighbours = k
 
-    def forward(self, x):
-        # x: (B, N, D)
-        B, N, D = x.shape
+    def forward(self, x_3d, x_features):
+        # x_3d: (B, N, 3) 3 dimensions
+        # x_features (B, N, D) D features
+        """
+        I want to ensure that sampling happens only in 3 dimensions, not the ones added by
+        the next linear layers. So per point matrix, we keep one that has all the features
+        and one with only the 3d coordinates. We sample on the second one and use the indices
+        to update the first one.
+        """
 
-        sampled_points = self.sample_fps(x)
-        M = sampled_points.shape[1]
-        #sample points is B, M, D
 
-        dist = torch.cdist(sampled_points, x)
-        idx = dist.topk(k=self.k, largest=False)[1]
+        B, N, D = x_features.shape
 
-        x_expanded = x.unsqueeze(1).expand(-1, M, -1, -1)
+        # centroids_x_3d is (B, M, 3) M is number of centroids
+        # centroids_x_features is (B, M, D) D is number of features
+        centroids_x_3d, centroids_x_all = self.sample_fps(x_3d, x_features)
+        M = centroids_x_3d.shape[1]
+
+
+        dist = torch.cdist(centroids_x_3d, x_3d)
+        idx = dist.topk(k=self.knn_neighbours, largest=False)[1]
+
+        x_3d_expanded = x_3d.unsqueeze(1).expand(-1, M, -1, -1)
+        idx_expanded = idx.unsqueeze(-1).expand(-1, -1, -1, 3)
+        groups_3d = torch.gather(x_3d_expanded, 2, idx_expanded)
+        #groups_3d: (B, M, K, 3) K is 32 by default
+
+        x_features_expanded = x_features.unsqueeze(1).expand(-1, M, -1, -1)
         idx_expanded = idx.unsqueeze(-1).expand(-1, -1, -1, D)
-        groups = torch.gather(x_expanded, 2, idx_expanded)
-        #groups: (B, M, K, D) K is 32 by default
+        groups_features = torch.gather(x_features_expanded, 2, idx_expanded)
+        # groups_features: (B, M, K, D) K is 32 by default
 
-        result = self.pointnet(groups)
-        # result: (B, M, dim_out)
+        #so right now we have per group (M groups in total) K points which have 3 dimensions and D features
+        result_3d = centroids_x_3d
+        result_features = self.pointnet(groups_features)
+        # result_3d: (B, M, 3)
+        # result_features: (B, M, dimout_pointntet)
 
-        return result
+        return result_3d, result_features
 
 
-    def sample_fps(self, x):
-        B, N, D = x.shape
+    def sample_fps(self, x_3d, x_all):
+        B, N, D = x_all.shape
 
-        x_flat = x.reshape(B * N, D)
-        batch = torch.arange(B, device=x.device).repeat_interleave(N)
+        #x_all (B, N, D)
+        #x_3d (B, N, 3) always
+        x_flat_3d = x_3d.reshape(B * N, x_3d.shape[2]) #x_3d.shape[2] is 3 always
+        x_flat_all = x_all.reshape(B * N, x_all.shape[2]) #x_all.shape[2] is N always
 
-        idx = fps(x_flat, batch=batch, ratio=self.ratio)
+        batch = torch.arange(B, device=x_3d.device).repeat_interleave(N)
+        idx = fps(x_flat_3d, batch=batch, ratio=self.ratio)
 
-        sampled_flat = x_flat[idx]
+        #extract sampled points from indices
+        sampled_flat_x_3d = x_flat_3d[idx]
+        sampled_flat_x_all = x_flat_all[idx]
 
-        M = sampled_flat.shape[0] // B
-        sampled_points = sampled_flat.reshape(B, M, D)
+        #reconstruct sampled points
+        M = sampled_flat_x_3d.shape[0] // B
+        sampled_points_3d = sampled_flat_x_3d.reshape(B, M, sampled_flat_x_3d.shape[1])
+        sampled_points_all = sampled_flat_x_all.reshape(B, M, sampled_flat_x_all.shape[1])
 
-        return sampled_points
+        return sampled_points_3d, sampled_points_all
     """
 
     def sample_fps(self, x):
