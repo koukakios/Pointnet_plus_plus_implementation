@@ -1,6 +1,7 @@
 import torch
-from .pointnet import Pointnet
+from pointnet import Pointnet
 from torch_geometric.nn import fps
+
 
 class SA(torch.nn.Module):
     def __init__(self, dims_1st_mlp, dims_2nd_mlp, ratio=0.25, k=32):
@@ -41,9 +42,11 @@ class SA(torch.nn.Module):
         groups_features = torch.gather(x_features_expanded, 2, idx_expanded)
         # groups_features: (B, M, K, D) K is 32 by default
 
+
         #so right now we have per group (M groups in total) K points which have 3 dimensions and D features
         result_3d = centroids_x_3d
         result_features = self.pointnet(groups_features)
+        #maybe use also 3d points each time
         # result_3d: (B, M, 3)
         # result_features: (B, M, dimout_pointntet)
 

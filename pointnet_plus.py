@@ -1,7 +1,6 @@
 import torch
-from .SetAbstraction import SA
-from .pointnet import Pointnet
-
+from pointnet import Pointnet
+from SetAbstraction import SA
 
 class Pointnet_plus(torch.nn.Module):
     def __init__(self, dim_in=3, num_classes=3):
@@ -11,6 +10,8 @@ class Pointnet_plus(torch.nn.Module):
         dims_sa1_1st_mlp = [dim_in, 64, 64]
         dims_sa1_2nd_mlp = [dims_sa1_1st_mlp[-1], 64, 128, 1024]
         self.sa1 = SA(dims_sa1_1st_mlp, dims_sa1_2nd_mlp, ratio=0.25, k=32)
+
+        #in the implementation they have up to 128 pnts
 
         #second set abstaction
         dims_sa2_1st_mlp = [dims_sa1_2nd_mlp[-1], 64, 64]
