@@ -111,7 +111,7 @@ class Pointnet_plus(torch.nn.Module):
         x_features = self.unitPointnet_1(x_features)
 
         #interpolate
-        x_3d, x_features = self.interpolate(x_3d, x_features, x_3d_1st_layer, x_features_2nd_layer)
+        x_3d, x_features = self.interpolate(x_3d, x_features, x_3d_1st_layer, x_features_1st_layer)
 
         #unit pointnet for segmentation
         per_class_pnt_logits = self.unitPointnetSegm(x_features)

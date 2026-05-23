@@ -40,6 +40,6 @@ class UnitPointnetSegm(torch.nn.Module):
         #optional Tnet here
         x_concat_segm = torch.clone(x)
         x = self.mlp_2(x)
-        x = self.mpl_3(torch.cat([x, x_concat_segm], dim = - 1))
-        x = self.mlp_3(x)
+        x = self.mlp_3(torch.cat([x, x_concat_segm], dim = - 1))
+        x = self.mlp_4(x)
         return x
