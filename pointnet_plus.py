@@ -1,17 +1,20 @@
 import torch
 from pointnet import Pointnet
 from SetAbstraction import SA
+from unitPointnet import UnitPointnet
+from unitPointnetSegm import UnitPointnetSegm
 
 class Pointnet_plus(torch.nn.Module):
     def __init__(self, dim_in=3, num_classes=3):
         super(Pointnet_plus, self).__init__()
+        self.num_classes = num_classes
 
         #first set abstraction
         dims_sa1_1st_mlp = [dim_in, 64, 64]
         dims_sa1_2nd_mlp = [dims_sa1_1st_mlp[-1], 64, 128, 1024]
         self.sa1 = SA(dims_sa1_1st_mlp, dims_sa1_2nd_mlp, ratio=0.25, k=32)
 
-        #in the implementation they have up to 128 pnts
+        #in the implementation i found they have up to 128 pnts
 
         #second set abstaction
         dims_sa2_1st_mlp = [dims_sa1_2nd_mlp[-1], 64, 64]
@@ -23,8 +26,8 @@ class Pointnet_plus(torch.nn.Module):
         """
 
         """
-        classification
-        """
+        Classification
+        
         #final pointnet in the end on all points practically so no sampling
         dims_pointnet_1st_mlp = [dims_sa2_2nd_mlp[-1], 64, 64]
         dims_pointnet_2nd_mlp = [dims_pointnet_1st_mlp[-1], 64, 128, 1024]
@@ -38,9 +41,25 @@ class Pointnet_plus(torch.nn.Module):
             torch.nn.ReLU(),
             torch.nn.Linear(64, num_classes)
         )
+        """
 
         """
         Segmentation
+        """
+        dims_unitPointnet1_1st_mlp = [dims_sa2_2nd_mlp[-1] + dims_sa1_2nd_mlp[-1], 64, 64]
+        dims_unitPointnet1_2nd_mlp = [dims_unitPointnet1_1st_mlp[-1], 64, 128, 1024]
+        self.unitPointnet_1 = UnitPointnet(dims_unitPointnet1_1st_mlp, dims_unitPointnet1_2nd_mlp)
+
+        dims_unitPointnet2_1st_mlp = [dims_unitPointnet1_2nd_mlp[-1] + dim_in, 64, 64]
+        dims_unitPointnet2_2nd_mlp = [dims_unitPointnet2_1st_mlp[-1], 64, 128, 1024]
+        dims_unitPointnet2_3rd_mlp = [dims_unitPointnet2_2nd_mlp[0] + dims_unitPointnet2_2nd_mlp[-1], 512, 256, 128]
+        dims_unitPointnet2_4th_mlp = [dims_unitPointnet2_3rd_mlp[-1], 128, self.num_classes]
+        self.unitPointnetSegm = UnitPointnetSegm(dims_unitPointnet2_1st_mlp, dims_unitPointnet2_2nd_mlp, dims_unitPointnet2_3rd_mlp, dims_unitPointnet2_4th_mlp)
+
+        """
+        dims_unitPointnet2_1st_mlp = [dims_unitPointnet1_2nd_mlp[-1] + dims_sa1_2nd_mlp[-1], 64, 64]
+        dims_unitPointnet2_2nd_mlp = [dims_unitPointnet1_1st_mlp[-1], 64, 128, 1024]
+        self.unitPointnet_1 = UnitPointnet(dims_unitPointnet1_1st_mlp, dims_unitPointnet1_2nd_mlp)
         """
 
     def forward(self, x):
@@ -89,17 +108,16 @@ class Pointnet_plus(torch.nn.Module):
         x_3d, x_features = self.interpolate(x_3d, x_features, x_3d_2nd_layer, x_features_2nd_layer)
 
         #unit pointnet
-        x_features = self.pointnet.mlp_1(x_features)
-        x_features = self.pointnet.mlp_2(x_features)
+        x_features = self.unitPointnet_1(x_features)
 
         #interpolate
-        x_3d, x_features = self.interpolate(x_3d, x_features, x_3d_1st_layer, x_features_1st_layer)
+        x_3d, x_features = self.interpolate(x_3d, x_features, x_3d_1st_layer, x_features_2nd_layer)
 
-        # unit pointnet
-        x_features = self.pointnet.mlp_1(x_features)
-        x_features = self.pointnet.mlp_2(x_features)
+        #unit pointnet for segmentation
+        per_class_pnt_logits = self.unitPointnetSegm(x_features)
 
-        return x
+        return per_class_pnt_logits
+
 
     def interpolate(self, x_3d_downsampled, x_features_downsampled,
                     x_3d_original, x_features_original):
