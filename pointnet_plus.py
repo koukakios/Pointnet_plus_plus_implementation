@@ -5,7 +5,7 @@ from unitPointnet import UnitPointnet
 from unitPointnetSegm import UnitPointnetSegm
 
 class Pointnet_plus(torch.nn.Module):
-    def __init__(self, dim_in=4, num_classes=3):
+    def __init__(self, dim_in=3, num_classes=3):
         super(Pointnet_plus, self).__init__()
         self.num_classes = num_classes
 

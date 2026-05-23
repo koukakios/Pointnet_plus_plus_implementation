@@ -16,6 +16,7 @@ class SequenceDataset(Dataset):
         sequence_dir = Path(sequence_dir)
 
         data = np.load(sequence_dir / data_filename)
+        data = data[:, :, :-1]
         labels = np.load(sequence_dir / label_filename)
 
         self.data = torch.from_numpy(data).float()
@@ -35,7 +36,7 @@ def get_args():
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--num_epochs", type=int, default=20)
     parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--num_workers", type=int, default=4)
+    parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--data_filename", default="points.npy")
     parser.add_argument("--label_filename", default="labels.npy")
     return parser.parse_args()
@@ -91,6 +92,11 @@ def run_loaders(model, loaders, loss_fn, device, optimizer=None):
     with context:
         for loader in loaders:
             for x, y in loader:
+                """
+                print("x shape:", x.shape)
+                print("y shape:", y.shape)
+                exit()
+                """
                 x = x.to(device)
                 y = y.to(device)
 
