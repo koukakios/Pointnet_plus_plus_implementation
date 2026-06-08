@@ -1,6 +1,7 @@
 import torch
 
 from models.pointnet_plus import Pointnet_plus
+from models.unitPointnetSegm import UnitPointnetSegm
 
 
 BATCH_SIZE = 32
@@ -8,6 +9,27 @@ NUM_POINTS = 1024
 DIM_IN = 5
 NUM_CLASSES = 3
 USE_FPS_FALLBACK = True
+
+
+def test_segmentation_head_has_linear_logits_output():
+    model = UnitPointnetSegm(
+        dims_1=[12, 8, 4],
+        dims_2=[4, 8, 16],
+        dims_3=[20, 8, 4],
+        dims_4=[4, 4, NUM_CLASSES],
+    )
+
+    assert isinstance(model.mlp_4[-1], torch.nn.Linear)
+    assert model.mlp_4[-1].out_features == NUM_CLASSES
+    assert not isinstance(model.mlp_4[-1], torch.nn.ReLU)
+
+    with torch.no_grad():
+        model.mlp_4[-1].weight.zero_()
+        model.mlp_4[-1].bias.copy_(torch.tensor([-1.0, 0.0, 1.0]))
+        output = model(torch.randn(2, 7, 12))
+
+    assert output.shape == (2, 7, NUM_CLASSES)
+    assert (output[..., 0] < 0).all()
 
 
 def install_fps_fallback():
@@ -27,6 +49,8 @@ def install_fps_fallback():
 
 
 def main():
+    test_segmentation_head_has_linear_logits_output()
+
     if USE_FPS_FALLBACK:
         install_fps_fallback()
 

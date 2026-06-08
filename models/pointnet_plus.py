@@ -1,8 +1,8 @@
 import torch
-from pointnet import Pointnet
-from SetAbstraction import SA
-from unitPointnet import UnitPointnet
-from unitPointnetSegm import UnitPointnetSegm
+from .pointnet import Pointnet
+from .SetAbstraction import SA
+from .unitPointnet import UnitPointnet
+from .unitPointnetSegm import UnitPointnetSegm
 
 class Pointnet_plus(torch.nn.Module):
     def __init__(self, dim_in=3, num_classes=3):

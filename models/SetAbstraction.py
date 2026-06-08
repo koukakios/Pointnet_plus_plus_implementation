@@ -1,5 +1,5 @@
 import torch
-from pointnet import Pointnet
+from .pointnet import Pointnet
 
 try:
     from torch_geometric.nn import fps

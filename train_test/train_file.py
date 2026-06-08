@@ -1,12 +1,15 @@
+import inspect
+from pathlib import Path
+
+import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
-from models.pointnet_plus import Pointnet_plus
-from pathlib import Path
-import numpy as np
 
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+
+from models.pointnet_plus import Pointnet_plus
 
 try:
     from torchinfo import summary
@@ -16,6 +19,11 @@ except ImportError:
 
 
 def print_model_summary(model, device):
+    print("Model source:", inspect.getfile(type(model)))
+    print(
+        "Segmentation head source:",
+        inspect.getfile(type(model.unitPointnetSegm)),
+    )
     print("\nModel:")
     print(model)
 
