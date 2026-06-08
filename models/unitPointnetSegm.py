@@ -1,4 +1,5 @@
 import torch
+from .MLP import BatchNormLastDim
 
 
 class UnitPointnetSegm(torch.nn.Module):
@@ -11,6 +12,7 @@ class UnitPointnetSegm(torch.nn.Module):
         layers = []
         for v, w in zip(dims_1, dims_1[1:]):
             layers.append(torch.nn.Linear(v, w))
+            layers.append(BatchNormLastDim(w))
             layers.append(torch.nn.ReLU())
         self.mlp_1 = torch.nn.Sequential(*layers)
 
@@ -19,12 +21,14 @@ class UnitPointnetSegm(torch.nn.Module):
         layers = []
         for v, w in zip(dims_2, dims_2[1:]):
             layers.append(torch.nn.Linear(v, w))
+            layers.append(BatchNormLastDim(w))
             layers.append(torch.nn.ReLU())
         self.mlp_2 = torch.nn.Sequential(*layers)
 
         layers = []
         for v, w in zip(dims_3, dims_3[1:]):
             layers.append(torch.nn.Linear(v, w))
+            layers.append(BatchNormLastDim(w))
             layers.append(torch.nn.ReLU())
         self.mlp_3 = torch.nn.Sequential(*layers)
 
@@ -32,6 +36,7 @@ class UnitPointnetSegm(torch.nn.Module):
         for v, w in zip(dims_4, dims_4[1:]):
             layers.append(torch.nn.Linear(v, w))
             if w != dims_4[-1]:
+                layers.append(BatchNormLastDim(w))
                 layers.append(torch.nn.ReLU())
         self.mlp_4 = torch.nn.Sequential(*layers)
 
