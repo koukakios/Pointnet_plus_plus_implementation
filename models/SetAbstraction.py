@@ -1,6 +1,14 @@
 import torch
 from pointnet import Pointnet
-from torch_geometric.nn import fps
+
+try:
+    from torch_geometric.nn import fps
+except ImportError:
+    def fps(*_args, **_kwargs):
+        raise RuntimeError(
+            "torch_geometric is not installed, and no FPS fallback has been installed. "
+            "Run train_file.py with --fps-mode fallback or install torch-geometric."
+        )
 
 
 class SA(torch.nn.Module):

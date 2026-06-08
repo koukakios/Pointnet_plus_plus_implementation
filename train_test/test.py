@@ -1,6 +1,6 @@
 import torch
 
-from pointnet_plus import Pointnet_plus
+from models.pointnet_plus import Pointnet_plus
 
 
 BATCH_SIZE = 32
@@ -11,7 +11,7 @@ USE_FPS_FALLBACK = True
 
 
 def install_fps_fallback():
-    import SetAbstraction as sa_module
+    from models import SetAbstraction as sa_module
 
     def fallback_fps(x, batch, ratio):
         sampled_indices = []
