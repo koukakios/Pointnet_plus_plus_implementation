@@ -14,7 +14,7 @@ class Pointnet_plus(torch.nn.Module):
         dims_sa1_2nd_mlp = [dims_sa1_1st_mlp[-1], 64, 128, 1024]
         self.sa1 = SA(dims_sa1_1st_mlp, dims_sa1_2nd_mlp, ratio=0.25, k=32)
 
-        #in the implementation i found they have up to 128 pnts
+        #in the implementation i found they have up to 128 dims
 
         #second set abstaction
         dims_sa2_1st_mlp = [dims_sa1_2nd_mlp[-1], 64, 64]

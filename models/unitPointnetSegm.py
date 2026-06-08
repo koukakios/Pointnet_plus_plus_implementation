@@ -31,7 +31,8 @@ class UnitPointnetSegm(torch.nn.Module):
         layers = []
         for v, w in zip(dims_4, dims_4[1:]):
             layers.append(torch.nn.Linear(v, w))
-            layers.append(torch.nn.ReLU())
+            if w != dims_4[-1]:
+                layers.append(torch.nn.ReLU())
         self.mlp_4 = torch.nn.Sequential(*layers)
 
     def forward(self, x):
